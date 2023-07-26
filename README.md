@@ -18,6 +18,3 @@ To run this project, you will need the following dependencies:
 - R programming language (version X.X.X)
 - RStudio (optional but recommended)
 - Required R packages (e.g., dplyr, ggplot2, caret, fastdummy ,...)
-
-## License
-This project is released under the [MIT License](https://opensource.org/licenses/MIT). You are free to use, modify, and distribute the code as per the terms of this license.
