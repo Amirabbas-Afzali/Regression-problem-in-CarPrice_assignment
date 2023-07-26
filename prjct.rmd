@@ -1,0 +1,840 @@
+---
+title: "Statistics Project"
+output: pdf_document
+---
+**Amirabbas Afzali - 400100662**
+
+At first , we load data :
+```{r}
+my_dataset = read.csv('D:/Term4/Statistics/R/Project/CarPrice_Assignment.csv')
+```
+
+```{r}
+head(my_dataset)
+```
+```{r}
+summary(my_dataset)
+```
+
+ Now we display the BOX plot related to *carlength*, *carwidth*, *carheight* and analyze them.
+
+
+```{r}
+boxplot(my_dataset[,c("wheelbase","carlength","carwidth")],
+        main = 'Box plot of carwidth , carlength & carheight')
+
+```
+
+```{r}
+boxplot(my_dataset[,"carwidth"],
+        main = 'Box plot of carwidth '
+        , xlab = 'carwidth'
+        , ylab = 'value')
+```
+
+
+$$Data\; wrangling $$
+-------------------------------------------------
+```{r}
+cat('missing value of curbweight :', length(my_dataset$curbweight[is.na(my_dataset$curbweight)]))
+cat('\nmissing value of boreratio : ',length(my_dataset$boreratio[is.na(my_dataset$boreratio)]))
+cat('\nmissing value of carbody : ',length(my_dataset$carbody[nchar(my_dataset$carbody)==0]))
+cat('\nmissing value of cylindernumber : ',length(my_dataset$cylindernumber[nchar(my_dataset$cylindernumber)==0]))
+```
+Now we replace them :
+```{r}
+my_dataset$boreratio[is.na(my_dataset$boreratio)] <- median(my_dataset$boreratio,na.rm = TRUE)
+my_dataset$curbweight[is.na(my_dataset$curbweight)] <- median(my_dataset$curbweight,na.rm = TRUE)
+my_dataset$cylindernumber[nchar(my_dataset$cylindernumber)==0] <- mode(my_dataset$cylindernumber)
+my_dataset$carbody[nchar(my_dataset$carbody)==0] <- mode(my_dataset$carbody)
+```
+When replacing missing data in the **CarPrice_Assignment** dataset or any other dataset, the choice between using the median or the mean depends on the nature of the variable and the characteristics of the data. Here are some considerations to help you decide:
+
+1. Outliers: If the variable in question is sensitive to outliers, it is generally more appropriate to use the median. The median is robust to outliers because it is not affected by extreme values. On the other hand, the mean can be influenced by outliers, especially if they are far from the central values of the distribution.
+
+2. Skewness: Assess the skewness of the variable. If the data is skewed or not normally distributed, the median may be a better choice. The median is not affected by the skewness of the distribution, whereas the mean can be pulled towards the long tail of the distribution if it is skewed.
+
+3. Data distributions: Consider the shape and characteristics of the data distribution. If the variable follows a symmetrical distribution with no significant outliers, the mean may provide a suitable estimate. However, if the data has a skewed or heavily tailed distribution, the median could provide a more representative estimate.
+
+4. Impact on analysis: Think about the implications of using the median or the mean on downstream analysis. Depending on the specific analysis or modeling technique you plan to use, the mean or median might be more appropriate. For instance, linear regression models typically assume that the predictors have a linear relationship with the response. In these cases, imputing missing values with the mean might be more suitable.
+
+
+The median is often used to replace missing data in data wrangling because it is a measure of central tendency that is less sensitive to extreme values or outliers compared to the mean. When dealing with missing data, it's important to handle it in a way that minimizes the impact on the overall analysis and maintains the integrity of the data.
+
+Here are a few reasons why the median is commonly used for replacing missing data:
+
+1. Robustness to outliers: The median is resistant to extreme values or outliers in the dataset. This makes it a suitable choice when the presence of outliers could distort the mean and affect imputation accuracy.
+
+2. Preserving data distribution: The median reflects the value that separates the upper and lower halves of a dataset. By using the median to replace missing values, the general distribution and order of the data are preserved to a certain extent.
+
+3. Non-parametric estimation: Unlike the mean, the median does not make any assumptions about the underlying data distribution. This makes it a more robust measure when the data does not follow a normal distribution or when we have limited information about the data characteristics.
+
+Regarding the difference between mean and median, it relates to their calculation and sensitivity to extreme values. The mean is calculated by summing all the values in a dataset and then dividing by the number of values. It considers every data point and can be highly influenced by outliers. On the other hand, the median is the middle value in a sorted dataset, separating the higher and lower halves. It is less affected by extreme values and provides a measure of the central tendency that allows for a better representation of the data when outliers are present.
+
+In summary, the median is often used for imputing missing numeric data in data wrangling due to its robustness to outliers and its ability to preserve the general distribution. The choice between mean and median depends on the nature of the data and the objective of the analysis, considering factors such as data distribution and the presence of outliers.
+
+And also, obviously, it is appropriate to use mode to replace missing data in categorical data.
+
+
+
+
+**$$Correlation \; map $$**
+---------------------------------
+```{r}
+library(corrplot)
+numeric_data <- my_dataset[,sapply(my_dataset,is.numeric)]
+corr_mat <- cor(numeric_data)
+corrplot(corr_mat,method = "color",order = 'alphabet')
+```
+
+
+Now we design 4 hypothesis tests and make a decision for it with a confidence level of 5% .
+
+First, we form a multiple linear regression :
+```{r}
+mlr_model  <- lm(price ~ symboling
+            + fueltype + aspiration + doornumber + carbody + drivewheel + enginelocation + wheelbase + carlength + carwidth + carheight + curbweight + enginetype
+            +cylindernumber + enginesize + fuelsystem + boreratio + stroke + compressionratio + horsepower + peakrpm + citympg + highwaympg ,data = my_dataset)
+
+model_summary <- summary(mlr_model)
+
+# Specify the column names of the features you're interested in
+feature_names <- c("stroke", "boreratio", "wheelbase","carheight")
+
+# Extract the t-values of the selected features
+t_values <- model_summary$coefficients[feature_names, "t value"]
+
+# Print the t-values
+print(t_values)
+```
+If variable answer that here $Price$ , be a linear function of the said variables , that is, we have a $Multiple\; Linear \;  Regression \; (MLR)$
+problem  and the relationship between the response variable and predictor variables will be like this :
+$$Y = \beta_0 + \beta_1X_1 + ... +\beta_nX_n$$
+
+Now we design hypothesis tests.
+
+Hypothesis test 1:
+---------------------------
+$$H_0 : \beta_{stroke} = 0 $$
+$$H_1 : \beta_{stroke} \neq 0 $$
+
+Thus, the null hypothesis is set that there is no relationship between response and the predictor variables.
+
+According to $t-value$ obtained in the above section , we have:
+$$ |t_{stroke}| > t_{\alpha} $$
+
+and we can reject $H_0$.
+
+
+
+Hypothesis test 2:
+---------------------------
+$$H_0 : \beta_{boreratio} = 0 $$
+$$H_1 : \beta_{boreratio} \neq 0 $$
+
+According to $t-value$ obtained in the above section , we have:
+$$ |t_{boreratio}| > t_{\alpha} $$
+
+and we can reject $H_0$.
+
+
+Hypothesis test 3:
+---------------------------
+$$H_0 : \beta_{wheelbase} = 0 $$
+$$H_1 : \beta_{wheelbase} \neq 0 $$
+
+According to $t-value$ obtained in the above section , we have:
+$$ |t_{wheelbase}| < t_{\alpha} $$
+
+and we can accept $H_0$.
+
+
+Hypothesis test 4:
+---------------------------
+$$H_0 : \beta_{carheight} = 0 $$
+$$H_1 : \beta_{carheight} \neq 0 $$
+
+According to $t-value$ obtained in the above section , we have:
+$$ |t_{carheight}| < t_{\alpha} $$
+
+and we can accept $H_0$.
+
+
+$$ define \; dummy \; variable$$
+----------------------------------
+In this section, we define $dummy$ variables for categorical columns using the one hot encode method.
+
+```{r}
+library('fastDummies')
+new_dataset <- dummy_cols(my_dataset, select_columns = c('fueltype','aspiration','doornumber','carbody','drivewheel',"enginelocation",'enginetype','cylindernumber'
+, 'fuelsystem'),remove_selected_columns = TRUE)
+```
+more about **One hot encoding** :
+
+One-hot encoding is a common method used to convert categorical variables into dummy variables for statistical analysis. It is a technique that creates binary variables representing each category of a categorical variable.
+
+Here's an explanation of the one-hot encoding process:
+
+1. Identify the categorical variable: Determine the categorical variable in your dataset that you want to encode. For example, let's suppose you have a variable called "color" that can have three categories: red, blue, and green.
+
+2. Create dummy variables: Create a new binary variable for each category of the categorical variable. In our example, we would create three dummy variables: "color_red," "color_blue," and "color_green."
+
+3. Assign values: Assign a value of 1 to the dummy variable representing the category to which each observation belongs, and assign a value of 0 to all other dummy variables. For instance, if an observation has a color value of "red," the "color_red" dummy variable would be 1, while the "color_blue" and "color_green" dummy variables would be 0.
+
+4. Interpretation: The resulting binary variables can now be used for statistical analysis, such as regression models. Each dummy variable represents the presence (1) or absence (0) of a specific category, allowing you to examine the effects of each category independently.
+
+One-hot encoding ensures that the categorical variables do not have an inherent order or magnitude assigned to them. Each category is represented by a separate dummy variable, which eliminates any ordinal interpretation.
+
+Remember to handle any reference-level category appropriately. To avoid issues with multicollinearity in regression models, typically, one category is considered the reference level, meaning its corresponding dummy variable is excluded and can be derived from the others.
+
+By using one-hot encoding, you can convert categorical variables into a format that can be easily utilized in statistical analyses, allowing for the incorporation of categorical information in predictive models effectively.
+
+
+
+$$   $$
+Then for the new dataset, we draw its correlation map :
+
+```{r}
+new_numeric_data <- new_dataset[,sapply(new_dataset,is.numeric)]
+
+new_corr_mat <- cor(new_numeric_data)
+
+corrplot(new_corr_mat,method = "circle")
+```
+
+
+
+
+Dividing the data into two groups, **train** and **test** :
+
+(The ratio of train data to test data is 80 to 20)
+```{r}
+set.seed(123)  # Setting a seed for reproducibility
+
+# Randomly shuffle the data
+shuffled_data <- new_numeric_data[sample(nrow(new_numeric_data)), ]
+
+# Define the proportion of data for training and testing
+train_prop <- 0.8  # 80% for training, 20% for test
+train_size <- floor(train_prop * nrow(shuffled_data))
+
+# Split the data into training and testing sets
+train_data <- shuffled_data[1:train_size, ]
+test_data <- shuffled_data[(train_size + 1):nrow(shuffled_data), ]
+train_data <- train_data[,-c(0,1,2)]
+test_data <- test_data[,-c(0,1,2)]
+
+
+
+cat('number of test data = ',nrow(test_data))
+cat('number of train data = ',nrow(train_data))
+```
+
+
+Now we have divided the CarPrice_Assignment dataset into a training set and a testing set, and we can build and evaluate our models using separate data subsets.
+
+In this section, we fit the multiple regression model on train data.
+```{r}
+#selected_columns <- train_data[,4:ncol(new_numeric_data)]
+MLR_model <- lm(price ~ . , data = train_data)
+Model_summary <- summary(MLR_model)
+```
+Now,we fit the model on the **train data** ,then calculate and report RSS (Residual Sum of Squares), TSS (Total Sum of Squares), MSE (Mean Squared Error), R-squared, and adjusted R-squared :
+
+```{r}
+# Make predictions on train data
+predicted <- predict(MLR_model, newdata = train_data)
+
+# Calculate residuals
+residuals <- train_data$price - predicted
+
+#  RSS
+RSS <- sum(residuals^2)
+
+#  TSS
+TSS <- sum((train_data$price - mean(train_data$price))^2)
+
+#  MSE
+MSE <- mean(residuals^2)
+#  R-squared
+R_squared <- 1 - RSS/TSS
+
+#  Adjusted R-squared
+num_predictors <- length(coefficients(MLR_model)) - 1
+num_obs <- length(train_data$price)
+adjusted_R_squared <- 1 - ((1 - R_squared) * (num_obs - 1)) / (num_obs - num_predictors - 1)
+
+cat("For train data :\n\n","RSS:", RSS, "\n","TSS:", TSS, "\n","MSE:", MSE, "\n","R-squared:", R_squared, "\n","Adjusted R-squared:", adjusted_R_squared, "\n")
+
+
+```
+
+Then,we fit the model on the **test data** and calculate and report RSS (Residual Sum of Squares), TSS (Total Sum of Squares), MSE (Mean Squared Error), R-squared, and adjusted R-squared :
+```{r}
+# Make predictions on test data
+predicted2 <- predict(MLR_model, newdata = test_data)
+
+# Calculate residuals
+residuals2 <- test_data$price - predicted2
+
+#  RSS
+RSS <- sum(residuals2^2)
+
+#  TSS
+TSS <- sum((test_data$price - mean(test_data$price))^2)
+
+#  MSE
+MSE <- mean(residuals2^2)
+
+#  R-squared
+R_squared <- 1 - RSS/TSS
+
+#  Adjusted R-squared
+
+num_predictors <- length(coefficients(MLR_model)) - 1
+num_obs <- length(test_data$price)
+adjusted_R_squared <- 1 - ((1 - R_squared) * (num_obs - 1)) / (num_obs - num_predictors - 1)
+
+cat("For test data :\n\n","RSS:", RSS, "\n","TSS:", TSS, "\n","MSE:", MSE, "\n","R-squared:", R_squared, "\n","Adjusted R-squared:", adjusted_R_squared, "\n")
+
+```
+ An explanation of each of the metrics and their significance in evaluating a regression model:
+
+1. RSS (Residual Sum of Squares):
+- RSS represents the sum of the squared differences between the predicted values and the actual values (residuals) in a regression model.
+- It measures the overall model's fit, with lower RSS indicating better model performance.
+- Helps assess the goodness-of-fit by quantifying the amount of unexplained variability in the dependent variable.
+
+2. TSS (Total Sum of Squares):
+- TSS represents the sum of the squared differences between the actual values and the mean of the dependent variable.
+- It serves as a benchmark for evaluating the amount of total variability present in the dependent variable.
+- Helps calculate the proportion of variability explained by the regression model, known as the R-squared.
+
+3. MSE (Mean Squared Error):
+- MSE represents the mean of the squared differences between the predicted values and the actual values.
+- It measures the average magnitude of the errors in the model's predictions.
+- Similar to RSS, lower MSE values indicate better model performance.
+
+4. R-squared:
+- R-squared is a statistical measure that represents the proportion of the total variability in the dependent variable that is explained by the independent variables (predictors).
+- It ranges from 0 to 1, where 0 indicates no explanatory power, and 1 represents a perfect fit.
+- R-squared provides an indication of how well the model captures the variation in the target variable.
+
+5. Adjusted R-squared:
+- Adjusted R-squared is an extension of R-squared that takes into account the number of predictors in the model.
+- It penalizes the addition of unnecessary predictors that do not contribute significantly to the model's performance.
+- Adjusted R-squared compensates for the potential overfitting caused by including too many predictors and provides a more reliable measure for model comparison.
+
+These metrics are commonly used to evaluate the performance and goodness-of-fit of regression models. They help assess the accuracy of predictions, the extent of explained variability, and the trade-off between model complexity and performance.
+
+$$ $$
+
+Now, we plot the prediction coefficients of features in our MLR model :
+
+```{r}
+coefficients <- coef(MLR_model)
+
+# get feature prediction
+feature_coeffs <- coefficients[-1]
+
+# Create the bar plot
+par(mar=c(11,4,4,4))
+
+barplot(feature_coeffs, col="#69b3a2",
+        names.arg = names(feature_coeffs),   las=2,
+        ylab = "Prediction Coefficients",
+        main = "Prediction Coefficients of Features",cex.axis=0.6, cex.names=0.6)
+```
+
+
+- In a multiple linear regression model, the magnitude of a coefficient does not necessarily indicate its importance or influence on the target variable (Price). The importance of a coefficient depends on several factors, including the scale of the associated predictor variable and the presence of multicollinearity.
+
+1. Scale of Predictor Variables:
+When predictor variables are on different scales, the coefficient magnitudes can vary widely. In such cases, comparing the magnitude of coefficients directly may not provide a fair assessment of importance. It is important to normalize or standardize the predictor variables before comparing their coefficients. This ensures that the coefficients are on a comparable scale and allows for a fair evaluation of importance.
+
+2. Multicollinearity:
+If predictor variables are strongly correlated with each other (multicollinearity), it can affect the interpretation of individual coefficients. In the presence of multicollinearity, the coefficients can become unstable, making it challenging to determine the true importance of each individual variable. In such cases, it may be more appropriate to assess the overall influence of a set of correlated variables rather than focusing solely on individual coefficients.
+
+To determine the importance of predictor variables in a multiple linear regression model, it is advisable to consider other factors such as the statistical significance of coefficients (p-values), the magnitude of standardized coefficients (when variables are standardized), and the overall predictive power of the model (e.g., R-squared, adjusted R-squared).
+
+Additionally, techniques such as feature selection methods (e.g., stepwise regression, LASSO, ridge regression) or domain knowledge can help identify the most important predictors to include in the model.
+
+Therefore, it is essential to interpret the coefficients in the context of the specific variables, their scales, and the presence of multicollinearity, rather than relying solely on their magnitude to determine importance.
+
+
+$$ $$
+
+- To **improve the performance** of a multiple linear regression model on the CarPrice_Assignment dataset when making predictions on the $test-data$, you can consider the following strategies:
+
+1. Feature Selection:
+Identify and select the most relevant and informative features for your regression model. You can use techniques like stepwise regression, LASSO (Least Absolute Shrinkage and Selection Operator), or ridge regression to automatically select or penalize less important variables.
+
+2. Address Multicollinearity:
+Deal with multicollinearity among predictor variables, which can impact model performance and lead to unstable coefficient estimates. You can detect multicollinearity using methods like correlation matrices or variance inflation factor (VIF) analysis and then address it by removing or transforming correlated variables.
+
+3. Data Transformation:
+Transforming variables can enhance the model's performance. Consider techniques such as log transformations, square root transformations, or scaling to normalize or handle skewed distributions of variables.
+
+4. Outlier Treatment:
+Identify and handle outliers in the dataset. Outliers can disproportionately influence the regression model's performance. You can remove outliers based on statistical tests or employ robust regression techniques that are less sensitive to outliers.
+
+5. Polynomial or Interaction Terms:
+Incorporate polynomial features or interaction terms to capture non-linear relationships or interactions between variables if there is evidence of non-linear associations or interaction effects present in the data.
+
+6. Cross-Validation and Regularization:
+Utilize cross-validation techniques, such as k-fold cross-validation, to assess and tune the model's hyperparameters. Additionally, consider employing regularization techniques like LASSO or ridge regression to shrink or constrain the coefficients, which can help with model generalization and performance on unseen data.
+
+7. Residual Analysis:
+Analyze the residuals of the model to identify any patterns or deviations from the assumptions of linear regression. Residual plots can provide insights into potential model deficiencies and guide further improvements.
+
+8. Additional Data:
+Consider gathering additional data that might provide more information relevant to the car price prediction task. Additional features or data points may enhance the model's performance and predictive accuracy.
+
+Remember, iterative model refinement and evaluation with proper validation techniques are essential to find the most effective strategies for improving your specific multiple linear regression model's performance on the CarPrice_Assignment dataset.
+
+
+Feature Selection
+-------------------------
+**1.Feature Selection using backward method (t-test)**
+
+In the backward method , we consider all the features at first, and at each step, we remove the feature that has the largest $p-value$ and continue this process until the $p-value$ of all Variables should be less than 5%.
+
+For this, we take help from the **MASS** library:
+
+```{r}
+library(MASS)
+# Perform backward feature selection using t-tests and p-value threshold of 0.05
+final_model1 <- stepAIC(MLR_model, direction = "backward", test = "none", alpha = 0.05)
+```
+```{r}
+pvalus <- summary(final_model1)$coefficients[,"Pr(>|t|)"]
+coef <- coef(final_model1)
+df1 <- data.frame(Coefficients = names(coef),P_Value = pvalus)
+row.names(df1) <-  1:length(coef)
+cat(names(coefficients(final_model1)), ':' ,sep = " , ")
+cat("Number of selected feautre : ",length(coefficients(final_model1)))
+```
+
+And as we can see, the number of features has been reduced to 25.
+
+- By reducing the number of features, the complexity of the model will be less and its interpretability will increase.
+But due to the fact that we have removed some features and ignore their effect, the performance of the model will probably decrease a little.
+
+
+Now we get the mentioned criteria again in the test and **train data** :
+```{r}
+# Make predictions on train data
+new_predicted1 <- predict(final_model1, newdata = train_data)
+residuals <- train_data$price - new_predicted1
+RSS <- sum(residuals^2)
+TSS <- sum((train_data$price - mean(train_data$price))^2)
+MSE <- mean(residuals^2)
+R_squared <- 1 - RSS/TSS
+num_predictors <- length(coefficients(final_model1)) - 1
+num_obs <- length(train_data$price)
+adjusted_R_squared <- 1 - ((1 - R_squared) * (num_obs - 1)) / (num_obs - num_predictors - 1)
+
+cat("For train data :\n\n","RSS:", RSS, "\n","TSS:", TSS, "\n","MSE:", MSE, "\n","R-squared:", R_squared, "\n","Adjusted R-squared:", adjusted_R_squared, "\n")
+
+```
+
+and also for **test data** :
+```{r}
+# Make predictions on test data
+new_predicted1 <- predict(final_model1, newdata = test_data)
+residuals <- test_data$price - new_predicted1
+RSS <- sum(residuals^2)
+TSS <- sum((test_data$price - mean(test_data$price))^2)
+MSE <- mean(residuals^2)
+R_squared <- 1 - RSS/TSS
+num_predictors <- length(coefficients(final_model1)) - 1
+num_obs <- length(test_data$price)
+adjusted_R_squared <- 1 - ((1 - R_squared) * (num_obs - 1)) / (num_obs - num_predictors - 1)
+
+cat("For test data :\n\n","RSS:", RSS, "\n","TSS:", TSS, "\n","MSE:", MSE, "\n","R-squared:", R_squared, "\n","Adjusted R-squared:", adjusted_R_squared, "\n")
+
+```
+As seen in the results above,
+after performing feature reduction, the following changes are generally expected in the metrics:
+
+1. **RSS** : RSS represents the sum of the squared residuals, which measures the discrepancy between the observed values and the model's predicted values. After feature reduction, if you remove features that were not significantly associated with the response variable, the model's fit will likely improve. This will lead to a increase in the RSS value.
+
+2. **TSS** (Total Sum of Squares): TSS represents the total variation in the response variable. It is the sum of the squared differences between the observed values and the mean of the response variable. Feature reduction does not directly impact TSS, as it measures the total variation in the response variable before and after any modeling.
+
+3. **MSE** : MSE is calculated as the RSS divided by the degrees of freedom. If the feature reduction leads to a increase in the RSS (as discussed above) while maintaining an adequate number of degrees of freedom, the MSE will also increase. An upper MSE indicates that the model's predictions have more error on average.
+
+4. **R-squared**: R-squared represents the proportion of the variance in the response variable explained by the model. It is calculated as 1 minus the ratio of RSS to TSS. After feature reduction, the R-squared value will likely decrease. This indicates that a smaller proportion of the variance in the response is accounted for by the remaining features.
+
+5. **Adjusted R-squared**: Adjusted R-squared adjusts the R-squared value based on the number of predictors in the model. It penalizes the inclusion of additional features that do not contribute significantly to the explanation of variance. After feature reduction, the Adjusted R-squared value may decrease if the removed features were contributing meaningfully to the model's performance.
+
+
+
+
+**2.Feature Selection using ANOVA**
+
+Now, we perform ANOVA-based feature selection using the F-test and report the 10 most important features  :
+```{r}
+predictors <- subset(train_data, select = -price)
+response <- train_data$price
+
+# Calculate the F-scores for each attribute column
+f_scores <- sapply(predictors, function(col) {
+  summary(aov(response ~ col, data = train_data))[[1]]['F value'][1][,'F value'][1]
+})
+
+df2 <- data.frame(Coefficients = names(f_scores),F_Value = f_scores)
+
+# sort rows of df in term of F_Value
+sorted_df2 <- df2[order(-df2$F_Value),]
+row.names(sorted_df2) <-  1:length(f_scores)
+
+# Print the 10 top attribute and its corresponding F-score
+cat("      Feature            F-score\n","1. ", sorted_df2[1,"Coefficients"], "   :   ", sorted_df2[1,"F_Value"], "\n"
+    ,"2. ", sorted_df2[2,"Coefficients"], "   :   ", sorted_df2[2,"F_Value"], "\n"
+,"3. ", sorted_df2[3,"Coefficients"], "   :   ", sorted_df2[3,"F_Value"], "\n",
+    "4. ", sorted_df2[4,"Coefficients"], "   :   ", sorted_df2[4,"F_Value"], "\n",
+    "5. ", sorted_df2[5,"Coefficients"], "   :   ", sorted_df2[5,"F_Value"], "\n",
+    "6. ", sorted_df2[6,"Coefficients"], "   :   ", sorted_df2[6,"F_Value"], "\n",
+    "7. ", sorted_df2[7,"Coefficients"], "   :   ", sorted_df2[7,"F_Value"], "\n"
+        ,"8. ", sorted_df2[8,"Coefficients"], "   :   ", sorted_df2[8,"F_Value"], "\n"
+        ,"9. ", sorted_df2[9,"Coefficients"], "   :   ", sorted_df2[9,"F_Value"], "\n",
+    "10. ", sorted_df2[10,"Coefficients"], "   :   ", sorted_df2[10,"F_Value"], "\n")
+
+```
+
+
+
+**Synergy Effect**
+--------------------
+Synergy Effect or Interaction Effect is a phenomenon that arises in the multiple linear regression setting in machine learning, when increase in the value of one Independent variable increases the impact of another Independent variable on the dependent Variable.
+
+for an example in **Advertisement Sales Data-set** :
+
+Let’s consider a data-set with advertising budget of a company for different categories and the sales of the company. So, the 3 columns of the data-set are **Radio Advertising**, **Newspaper Advertising** and **Sales**.
+Let’s Fit a linear model in this data-set. This linear model’s equation would look like this.
+
+$$ Y = \beta_0 + \beta_1*radio + \beta_2* newspaper $$
+
+
+Where beta0 , beta1 and beta2 are the weights and biases to be learnt.
+Even though this might work fine, There are some cases where this model’s predictions might underestimate the actual sales in certain areas and overestimate the actual sales in other areas.
+
+![.](synergy.png)
+
+In these scenario, the model underestimates sales at times when neither value of radio investment or newspaper investment are extremely small or high.
+
+The model overestimates sales at times when either newspaper or radio has extremely high value i.e, newspaper investment being high and radio investment being low or vice versa. (When one particular predictor value is high).
+
+This is because, Sometimes in reality, the resultant target would have a high value when all the predictors contribute to the prediction instead of just one predictor contributing more and the others contributing less.
+
+
+CODE:
+```{r}
+reduced_train_data <- train_data[,c(sorted_df2[1:10,"Coefficients"],"price")]
+reduced_test_data <- test_data[,c(sorted_df2[1:10,"Coefficients"],"price")]
+
+library(dplyr)
+
+feature_combinations <- combn(colnames(reduced_train_data), 2)
+
+#1
+new_train_data <- reduced_train_data
+new_train_data$newcolumn <- reduced_train_data[,feature_combinations[,1][1]] * reduced_train_data[,feature_combinations[,1][2]]
+model1 <- lm(price ~ . , data = new_train_data)
+cat("For synergy effect between ",feature_combinations[,1][1]," and ",feature_combinations[,1][2]," :\n P-Value of new column = ",summary(model1)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| > \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is low and we do not add this variable to the set of features.
+
+```{r}
+#2
+new_train_data2 <- reduced_train_data
+new_train_data2$newcolumn <- reduced_train_data[,feature_combinations[,2][1]] * reduced_train_data[,feature_combinations[,2][2]]
+model2 <- lm(price ~ . , data = new_train_data2)
+cat("For synergy effect between ",feature_combinations[,2][1]," and ",feature_combinations[,2][2]," :\n P-Value of new column = ",summary(model2)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| < \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is high and we can add this variable to the set of features.
+
+```{r}
+#3
+new_train_data3 <- reduced_train_data
+new_train_data3$newcolumn <- reduced_train_data[,feature_combinations[,3][1]] * reduced_train_data[,feature_combinations[,3][2]]
+model3 <- lm(price ~ . , data = new_train_data3)
+cat("For synergy effect between ",feature_combinations[,2][1]," and ",feature_combinations[,2][2]," :\n P-Value of new column = ",summary(model3)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| < \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is high and we can add this variable to the set of features.
+
+```{r}
+#4
+new_train_data4 <- reduced_train_data
+new_train_data4$newcolumn <- reduced_train_data[,feature_combinations[,4][1]] * reduced_train_data[,feature_combinations[,4][2]]
+model4 <- lm(price ~ . , data = new_train_data4)
+cat("For synergy effect between ",feature_combinations[,4][1]," and ",feature_combinations[,4][2]," :\n P-Value of new column = ",summary(model4)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| < \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is high and we can add this variable to the set of features.
+
+```{r}
+#5
+new_train_data5 <- reduced_train_data
+new_train_data5$newcolumn <- reduced_train_data[,feature_combinations[,5][1]] * reduced_train_data[,feature_combinations[,5][2]]
+model5 <- lm(price ~ . , data = new_train_data5)
+cat("For synergy effect between ",feature_combinations[,5][1]," and ",feature_combinations[,5][2]," :\n P-Value of new column = ",summary(model5)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| < \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is high and we can add this variable to the set of features.
+
+```{r}
+#6
+new_train_data6 <- reduced_train_data
+new_train_data6$newcolumn <- reduced_train_data[,feature_combinations[,6][1]] * reduced_train_data[,feature_combinations[,6][2]]
+model6 <- lm(price ~ . , data = new_train_data2)
+cat("For synergy effect between ",feature_combinations[,6][1]," and ",feature_combinations[,6][2]," :\n P-Value of new column = ",summary(model6)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| < \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is high and we can add this variable to the set of features.
+
+```{r}
+#7
+new_train_data7 <- reduced_train_data
+new_train_data7$newcolumn <- reduced_train_data[,feature_combinations[,7][1]] * reduced_train_data[,feature_combinations[,7][2]]
+model7 <- lm(price ~ . , data = new_train_data7)
+cat("For synergy effect between ",feature_combinations[,7][1]," and ",feature_combinations[,7][2]," :\n P-Value of new column = ",summary(model7)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| < \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is high and we can add this variable to the set of features.
+
+```{r}
+#8
+new_train_data8 <- reduced_train_data
+new_train_data8$newcolumn <- reduced_train_data[,feature_combinations[,8][1]] * reduced_train_data[,feature_combinations[,8][2]]
+model8 <- lm(price ~ . , data = new_train_data8)
+cat("For synergy effect between ",feature_combinations[,8][1]," and ",feature_combinations[,8][2]," :\n P-Value of new column = ",summary(model2)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| < \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is high and we can add this variable to the set of features.
+
+```{r}
+#9
+new_train_data9 <- reduced_train_data
+new_train_data9$newcolumn <- reduced_train_data[,feature_combinations[,9][1]] * reduced_train_data[,feature_combinations[,9][2]]
+model9 <- lm(price ~ . , data = new_train_data9)
+cat("For synergy effect between ",feature_combinations[,9][1]," and ",feature_combinations[,9][2]," :\n P-Value of new column = ",summary(model9)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| < \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is high and we can add this variable to the set of features.
+
+```{r}
+#10
+new_train_data10 <- reduced_train_data
+new_train_data10$newcolumn <- reduced_train_data[,feature_combinations[,10][1]] * reduced_train_data[,feature_combinations[,10][2]]
+model10 <- lm(price ~ . , data = new_train_data2)
+cat("For synergy effect between ",feature_combinations[,10][1]," and ",feature_combinations[,10][2]," :\n P-Value of new column = ",summary(model10)$coefficient["newcolumn","Pr(>|t|)"])
+```
+becuase :
+
+$$ |P-Value| < \frac{\alpha}{2} = 0.025$$
+
+It means that its effect is high and we can add this variable to the set of features.
+
+
+
+
+**Other models :**
+----------------------
+
+$$1.Decision \;tree$$
+----------------
+about Decision tree :
+
+Decision tree models are popular machine learning algorithms used for both classification and regression tasks. They resemble a flowchart-like structure with a tree-like graph, where each internal node represents a feature, each branch represents a decision rule, and each leaf node represents an outcome or a prediction.
+
+Here's a breakdown of the key concepts and steps in a decision tree model:
+
+1. Feature Selection: The algorithm evaluates different features in your dataset and determines which ones are the most informative for making predictions. It uses various techniques like information gain, Gini impurity, or entropy to measure the predictive power of each feature.
+
+2. Splitting Criteria: The algorithm selects an attribute to split the dataset at each decision node based on a certain criterion. The most commonly used criteria include Gini index, which measures the impurity of a node, and entropy, which quantifies the disorder or uncertainty in the data.
+
+3. Building the Tree: The algorithm recursively splits the data based on the chosen feature and splitting criteria until it reaches the leaf nodes. At each step, it creates child nodes that represent different outcomes or further decisions.
+
+4. Pruning (optional): After building the initial decision tree, pruning techniques can be applied to reduce overfitting. Pruning involves removing unnecessary branches or nodes that are not significantly contributing to the model's predictive power. This helps improve the model's performance on unseen data.
+
+5. Prediction: Once the decision tree is constructed, prediction is performed by traversing the tree from the root node to the appropriate leaf node based on the values of the input features. The outcome associated with the leaf node is then returned as the prediction.
+
+Decision tree models have several advantages, including their interpretability, as the resulting tree structure can be easily visualized and understood. They can handle both numerical and categorical data and can capture non-linear relationships between features. Decision trees are also robust to outliers and missing values.
+
+However, decision tree models can be prone to overfitting, particularly when the tree becomes too complex. Ensemble methods like Random Forests and Gradient Boosting are often used to address this issue by combining multiple decision trees.
+
+
+CODE:
+```{r}
+# Load the required packages
+library(rpart)
+library(rpart.plot)
+
+# Specify the column names of the predictor variables
+predictors <- colnames(train_data)
+
+# Specify the target variable
+target <- "price"
+myformula <- as.formula(paste(target, "~", paste(predictors, collapse = " + ")))
+# Train the decision tree model
+tree_model <- rpart(myformula, data = train_data)
+
+# Predict car prices using the test set
+predicted_prices <- predict(tree_model, newdata = test_data)
+
+residuals <- test_data$price - predicted_prices
+mse <- mean(residuals^2)
+tss <- sum((test_data$price - mean(test_data$price))^2)
+rss <- sum(residuals^2)
+r_squared <- (tss - rss) / tss
+
+cat("Decision tree model :\n","Mean Squared Error (MSE): ", mse, "\n R-squared: ", r_squared)
+
+```
+
+```{r}
+rpart.plot(tree_model,
+           box.palette = "Blues",
+           nn = TRUE,
+           type = 3,
+           extra = 1,
+           branch = 0.5,
+           fallen.leaves = TRUE,
+           shadow.col = "gray");
+```
+
+$$2.SVM \;(Support\; Vector\; Machines)$$
+----------------
+about SVM :
+
+SVM, short for Support Vector Machines, is a powerful machine learning algorithm commonly used for both classification and regression tasks. It is particularly well-suited for solving complex problems with high-dimensional data. SVM aims to find an optimal hyperplane that separates data points into different classes while maximizing the margin or distance between the classes.
+
+Here are the key concepts and steps involved in SVM:
+
+1. Margin and Hyperplane: The algorithm works by finding a hyperplane that separates the data points of different classes. The hyperplane is essentially a decision boundary in the feature space. The goal is to find the hyperplane that maximizes the margin, which is the distance between the hyperplane and the nearest data points of each class.
+
+2. Support Vectors: SVM gets its name from the data points called support vectors. These are the data points located closest to the decision boundary or the margin. Only these support vectors contribute to the construction of the hyperplane. Other data points in the training set are not used in the decision boundary calculation but may influence it indirectly.
+
+3. Kernel Trick: SVM can handle both linearly separable and non-linearly separable data by utilizing a kernel function. The kernel trick transforms the original feature space into a higher-dimensional space, making it easier to find a hyperplane that can separate the data points. This allows SVM to learn complex decision boundaries.
+
+4. Regularization Parameter (C): C is a hyperparameter in SVM that controls the trade-off between achieving a wider margin and allowing training points to be misclassified. A smaller value of C allows more misclassifications but results in a wider margin, potentially leading to underfitting. On the other hand, a larger C penalizes misclassifications more, resulting in a narrower margin and potential overfitting.
+
+5. Kernel Functions: SVM supports different types of kernel functions such as linear, polynomial, radial basis function (RBF), and sigmoid. These kernel functions define the similarity or distance between data points in the transformed higher-dimensional space. The choice of the kernel function depends on the data and the problem at hand.
+
+6. Prediction: After training, SVM can be used to predict the class labels of new, unseen data points. It assigns a new data point to a particular class based on its position relative to the decision boundary learned during training.
+
+SVM has several advantages, including its ability to handle high-dimensional data, effectiveness in handling non-linear relationships through kernel functions, and robustness against overfitting when the appropriate regularization parameter is chosen.
+
+
+CODE:
+```{r}
+library(e1071)
+myformula2 <- price ~ wheelbase+carlength+carwidth+carheight+curbweight+enginesize+boreratio+stroke+compressionratio+horsepower+peakrpm+citympg+highwaympg
+
+# Train the SVM model
+SVM_model <- svm(myformula2, data = train_data,kernel = "radial")
+
+predicted_prices <- predict(SVM_model, newdata = test_data)
+# Calculate the residuals
+residuals <- test_data$price - predicted_prices
+mse <- mean(residuals^2)
+tss <- sum((test_data$price - mean(test_data$price))^2)
+rss <- sum((predicted_prices - test_data$price)^2)
+r_squared <- 1 - (rss / tss)
+
+cat("SVM model :\n","Mean Squared Error (MSE): ", mse, "\n R-squared: ", r_squared)
+
+
+```
+
+$$3.SVR \;(Support \;Vector\; Regression)$$
+---------------
+Unlike the SVM classifier, SVR is an extension that is specifically designed for regression tasks. It can handle nonlinear relationships and works well in high-dimensional spaces.
+```{r}
+library(e1071)
+# Train the SVR model
+SVR_model <- svm(myformula2, data = train_data,kernel = "radial",type = "eps-regression")
+
+predicted_prices <- predict(SVR_model, newdata = test_data)
+# Calculate the residuals
+residuals <- test_data$price - predicted_prices
+mse <- mean(residuals^2)
+tss <- sum((test_data$price - mean(test_data$price))^2)
+rss <- sum((predicted_prices - test_data$price)^2)
+r_squared <- 1 - (rss / tss)
+
+cat("SVR model :\n","Mean Squared Error (MSE): ", mse, "\n R-squared: ", r_squared)
+```
+$$4.GBM \;(Gradient \;Boosting\; Machine)$$
+-------------------------------
+Gradient Boosting models, such as Gradient Boosting Machines (GBM) or XGBoost, iteratively build an ensemble of weak predictive models. They are known for their strong predictive performance.
+```{r}
+library(gbm)
+# Train the gbm model
+gbm_model <- gbm(myformula2, data = train_data,n.trees=1000,interaction.depth=3,shrinkage=0.01)
+
+predicted_prices <- predict(gbm_model, newdata = test_data,n.trees=1000)
+# Calculate the residuals
+residuals <- test_data$price - predicted_prices
+mse <- mean(residuals^2)
+tss <- sum((test_data$price - mean(test_data$price))^2)
+rss <- sum((predicted_prices - test_data$price)^2)
+r_squared <- 1 - (rss / tss)
+
+cat("GBM model :\n","Mean Squared Error (MSE): ", mse, "\n R-squared: ", r_squared)
+
+```
+
+
+$$5.Random \;Forest$$
+-------------------------------
+Random Forest: Random Forest is an ensemble learning model that combines multiple decision trees to make predictions. It can handle nonlinear relationships and interactions between variables.
+
+```{r}
+library(randomForest)
+# Train the rm model
+rf_model <- randomForest(myformula2, data = train_data)
+
+predicted_prices <- predict(rf_model, newdata = test_data)
+# Calculate the residuals
+residuals <- test_data$price - predicted_prices
+mse <- mean(residuals^2)
+tss <- sum((test_data$price - mean(test_data$price))^2)
+rss <- sum((predicted_prices - test_data$price)^2)
+r_squared <- 1 - (rss / tss)
+
+cat("RandomForest model :\n","Mean Squared Error (MSE): ", mse, "\n R-squared: ", r_squared)
+
+```
+
