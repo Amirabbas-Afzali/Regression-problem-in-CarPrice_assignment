@@ -15,6 +15,6 @@ The project includes the following features:
 
 ## Dependencies
 To run this project, you will need the following dependencies:
-- R programming language (version X.X.X)
-- RStudio (optional but recommended)
+- R programming language 
+- RStudio 
 - Required R packages (e.g., dplyr, ggplot2, caret, fastdummy ,...)
